@@ -9,7 +9,7 @@ using System.IO;
 using System.Threading;
 using System.Globalization;
 using System.Text.RegularExpressions;
-
+using DevExpress.XtraSplashScreen;
 
 namespace PM2._5_Project
 {
@@ -470,7 +470,7 @@ namespace PM2._5_Project
           
         }
 
-
+        string str = "";
         private void send_MsgPMP(string sendOrder)
         {
             GlobalParameter.GetPmData = new List<string> { };
@@ -1722,133 +1722,140 @@ namespace PM2._5_Project
 		}
         string diluteF = "";
         private void simpleButton1_Click_1(object sender, EventArgs e)
-		{
-            if (!_PortPM.IsOpen) {
-                _PortPM.Open();
+        {
+            try
+            {
+
+                string str = "";
+
+                if (!switch1.Value)
+                {
+                    SplashScreenManager.ShowForm(typeof(WaitForm1));
+
+                    _PortPM.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(serialPort1_DataReceived);
+                    if (!_PortPM.IsOpen)
+                    {
+                        _PortPM.Open();
+                    }
+                    _PortPM.Write(ConnectA.ToByte(GlobalParameter.readBack), 0, ConnectA.ToByte(GlobalParameter.readBack).Length);
+                    Thread.Sleep(200);
+                    _PortPM.Write(ConnectA.ToByte(GlobalParameter.readLog), 0, ConnectA.ToByte(GlobalParameter.readLog).Length);
+
+                    Thread.Sleep(2000);
+
+                    SplashScreenManager.CloseForm();
+
+                    if (str.Length > 0)
+                    {
+
+
+                        List<ReportData> rd = new List<ReportData>();
+                        XtraReport1 xtraReport = new XtraReport1();
+
+
+                        String rex = "(?<=\r\n).*?(?=\r\n)";
+                        MatchCollection regResult = Regex.Matches(str, rex);
+
+
+                        foreach (Match item in regResult)
+                        {
+                            // CRC.write_Txt(item);
+                           // richTextBox1.Text += item.Value.ToString();
+                            string[] aa = item.ToString().Split(',');
+                            if (aa.Length > 5)
+                            {
+                                ReportData red = new ReportData();
+                                red.TimepmStart = aa[0] + " " + aa[1];
+                                red.TimepmEnt = aa[0] + " " + DateTime.Parse(aa[1]).AddHours(1).ToString("HH:mm:ss");
+                                red.Hpm = aa[3];
+                                red.HpmOther = "0";
+                                rd.Add(red);
+                            }
+                        }
+                        xtraReport.DataSource = rd;
+
+                        using (SaveFileDialog saveDialog = new SaveFileDialog())
+                        {
+                            saveDialog.Filter = "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx";
+                            if (saveDialog.ShowDialog() != DialogResult.Cancel)
+                            {
+                                string exportFilePath = saveDialog.FileName;
+                                string fileExtenstion = new FileInfo(exportFilePath).Extension;
+
+                                switch (fileExtenstion)
+                                {
+                                    case ".xls":
+
+
+                                        xtraReport.ExportToXls(exportFilePath);
+                                        break;
+                                    case ".xlsx":
+                                        xtraReport.ExportToXlsx(exportFilePath);
+                                        break;
+
+                                }
+
+                                if (File.Exists(exportFilePath))
+                                {
+                                    try
+                                    {
+                                        if (DialogResult.Yes == MessageBox.Show("文件已成功导出，是否打开文件?", "提示", MessageBoxButtons.YesNo))
+                                        {
+
+                                            System.Diagnostics.Process.Start(exportFilePath);
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        String msg = "The file could not be opened." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
+                                        MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    }
+                                }
+                                else
+                                {
+                                    String msg = "The file could not be saved." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
+                                    MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+                            }
+                        }
+
+
+
+                    }
+
+                }
+                else
+                {
+
+                    MessageBox.Show(" 将实验关闭！");
+
+                }
+
             }
-            send_MsgPMP(GlobalParameter.readBack);
-            // 重新开机后pm.25设备是数据指针在最后一个位置如果读取数据是没有的
-            // 每条数据的结尾是/r/n;,在解析数据的时候可以利用这一点
-            send_MsgPMP(GlobalParameter.readLog);
+            catch
+            {
 
-            //if (button3.Text == "开始" && switch1.Value) {
+                MessageBox.Show("连接通讯异常！");
+            }
+        }
 
-            //    send_Msg(GlobalParameter.readLog);
-
-            //}
-
-           
-            //List<ReportData> rd = new List<ReportData>();
-            //rd.Add(ReportData.inserData());
-            //rd.Add(ReportData.inserData());
-            //XtraReport1 xtraReport = new XtraReport1();
-            //xtraReport.DataSource = rd;
-         
-            //using (SaveFileDialog saveDialog = new SaveFileDialog())
-            //{
-            //    saveDialog.Filter = "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx";
-            //    if (saveDialog.ShowDialog() != DialogResult.Cancel)
-            //    {
-            //        string exportFilePath = saveDialog.FileName;
-            //        string fileExtenstion = new FileInfo(exportFilePath).Extension;
-
-            //        switch (fileExtenstion)
-            //        {
-            //            case ".xls":
-            //                xtraReport.ExportToXls(exportFilePath);
-            //                break;
-            //            case ".xlsx":
-            //                xtraReport.ExportToXlsx(exportFilePath);
-            //                break;
-                        
-            //        }
-
-            //        if (File.Exists(exportFilePath))
-            //        {
-            //            try
-            //            {
-            //                if (DialogResult.Yes == MessageBox.Show("文件已成功导出，是否打开文件?", "提示", MessageBoxButtons.YesNo))
-            //                {
-
-            //                    System.Diagnostics.Process.Start(exportFilePath);
-            //                }
-            //            }
-            //            catch
-            //            {
-            //                String msg = "The file could not be opened." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-            //                MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //            }
-            //        }
-            //        else
-            //        {
-            //            String msg = "The file could not be saved." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-            //            MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //        }
-            //    }
-            //}
-            //  ReportPrintTool printTool = new ReportPrintTool(xtraReport);
-            // printTool.ShowPreview();
-            // Invoke the Ribbon Print Preview form   
-            // and load the report document into it.  
-            // printTool.ShowRibbonPreview();
-
-            // Invoke the Ribbon Print Preview form modally  
-            // with the specified look and feel settings.  
-            //printTool.ShowRibbonPreviewDialog(UserLookAndFeel.Default);
-
-            // Invoke the Print Preview form   
-            // and load the report document into it.  
+        private void serialPort1_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+        {
 
 
-            // Invoke the Print Preview form modally  
-            // with the specified look and feel settings.  
-            // printTool.ShowPreviewDialog(UserLookAndFeel.Default);
-            ;
-            
-            //try
-            //{
-            //	if (!switch1.Value)
-            //	{
-            //		if (threadTimer !=null) {
+            do
+            {
 
-            //			threadTimer.Dispose();
-            //			Thread.Sleep(500);
-            //		}
+                int count = _PortPM.BytesToRead;
+                if (count <= 0)
+                    break;
+                byte[] readBuffer = new byte[count];
 
-            //		//获取主机电脑串口名称
-            //		series_Port();
-            //		//连接串口并开启读取数据计时器
-            //		if (series_Open())
-            //		{
-            //			MessageBox.Show("串口连接成功");
-            //			threadTimer = new System.Threading.Timer(new TimerCallback(TimerUp), null, Timeout.Infinite, 500);
-            //			threadTimer.Change(0, 1000);
+                Application.DoEvents();
+                _PortPM.Read(readBuffer, 0, count);
+                str += System.Text.Encoding.Default.GetString(readBuffer);
 
-            //			readData.Enabled = true;
-            //		}
-            //		else
-            //		{
-
-            //			MessageBox.Show("需要检查连接设置");
-
-            //		}
-
-
-            //	}
-            //	else
-            //	{
-
-            //		MessageBox.Show("先关闭实验");
-
-            //	}
-            //}
-            //catch (Exception) {
-
-            //	MessageBox.Show("串口连接未成功");
-
-            //}
-
-            //读取报告并
+            } while (_PortPM.BytesToRead > 0);
 
 
         }
