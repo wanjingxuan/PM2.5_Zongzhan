@@ -1726,11 +1726,12 @@ namespace PM2._5_Project
             try
             {
 
-                string str = "";
+               
 
                 if (!switch1.Value)
                 {
                     SplashScreenManager.ShowForm(typeof(WaitForm1));
+                    GlobalParameter.readLogStr = "";
 
                     _PortPM.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(serialPort1_DataReceived);
                     if (!_PortPM.IsOpen)
@@ -1740,12 +1741,10 @@ namespace PM2._5_Project
                     _PortPM.Write(ConnectA.ToByte(GlobalParameter.readBack), 0, ConnectA.ToByte(GlobalParameter.readBack).Length);
                     Thread.Sleep(200);
                     _PortPM.Write(ConnectA.ToByte(GlobalParameter.readLog), 0, ConnectA.ToByte(GlobalParameter.readLog).Length);
-
-                    Thread.Sleep(2000);
-
+                    Thread.Sleep(4000);
+                    CRC.write_Txt(GlobalParameter.readLogStr);
                     SplashScreenManager.CloseForm();
-
-                    if (str.Length > 0)
+                    if (GlobalParameter.readLogStr.Length > 0)
                     {
 
 
@@ -1754,12 +1753,12 @@ namespace PM2._5_Project
 
 
                         String rex = "(?<=\r\n).*?(?=\r\n)";
-                        MatchCollection regResult = Regex.Matches(str, rex);
+                        MatchCollection regResult = Regex.Matches(GlobalParameter.readLogStr, rex);
 
 
                         foreach (Match item in regResult)
                         {
-                            // CRC.write_Txt(item);
+                             CRC.write_Txt(item);
                            // richTextBox1.Text += item.Value.ToString();
                             string[] aa = item.ToString().Split(',');
                             if (aa.Length > 5)
@@ -1832,18 +1831,17 @@ namespace PM2._5_Project
                 }
 
             }
-            catch
+            catch(Exception ex)
             {
 
-                MessageBox.Show("连接通讯异常！");
+                MessageBox.Show("连接通讯异常！"+ex.ToString());
             }
         }
 
         private void serialPort1_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
 
-
-            do
+                do
             {
 
                 int count = _PortPM.BytesToRead;
@@ -1853,10 +1851,9 @@ namespace PM2._5_Project
 
                 Application.DoEvents();
                 _PortPM.Read(readBuffer, 0, count);
-                str += System.Text.Encoding.Default.GetString(readBuffer);
+                GlobalParameter.readLogStr+= System.Text.Encoding.Default.GetString(readBuffer);
 
             } while (_PortPM.BytesToRead > 0);
-
 
         }
 

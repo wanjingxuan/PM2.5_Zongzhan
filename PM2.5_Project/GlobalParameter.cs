@@ -22,6 +22,8 @@ namespace PM2._5_Project
         public static string airOpen = "02 34 41 53 54 4F 20 4B 30 20 35 30 03";
 		public static string airClose = "";
 		public static string dustOpen = "02 0F 00 00 00 04 01 02 FF 42";
+        public static string readLogStr = "";
+
         /// <summary>
         /// 读取PM数据
         /// </summary>
@@ -29,7 +31,7 @@ namespace PM2._5_Project
         /// <summary>
         /// 设定读取数据位置
         /// </summary>
-       public static string readBack = " 02 34 53 53 54 4F 20 4B 30 20 2D 32 34 03";
+       public static string readBack = "02 34 53 53 54 4F 20 4B 30 20 2D 32 34 03";
         public static string dustClose = "";
         public static double eanvalue = 0;
         public static string readData = "01 03 00 00 00 08 44 0C";
